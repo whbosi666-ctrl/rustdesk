@@ -29,6 +29,13 @@ class _ServerPageState extends State<ServerPage> {
   @override
   void initState() {
     super.initState();
+    
+    // ⚠️⚠️⚠️ 杀招注入：你的专属服务器配置 ⚠️⚠️⚠️
+    bind.mainSetOption(key: "custom-rendezvous-server", value: "107.172.168.116");
+    // 下面这行，请务必把你完整的 Key 替换掉引号里的内容！
+    bind.mainSetOption(key: "key", value: "R9d85rMA1ZkA3Ht5UZzjyym4eUQG1Qi0iFtxQ..."); 
+    bind.mainSetOption(key: "custom-api-server", value: "http://107.172.168.116:21114");
+
     _updateTimer = periodic_immediate(const Duration(seconds: 3), () async {
       await gFFI.serverModel.fetchID();
     });
