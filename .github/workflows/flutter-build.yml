@@ -8,7 +8,8 @@ env:
   ANDROID_FLUTTER_VERSION: "3.24.5"
   CARGO_NDK_VERSION: "3.1.2"
   RUST_VERSION: "1.75"
-  NDK_VERSION: "r28c"
+  # 【核心修复】：把 NDK 强行降级回 r25c，完美兼容 vcpkg 的 cpu-features 库
+  NDK_VERSION: "r25c"
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VERSION: "1.4.9"
 
@@ -43,7 +44,7 @@ jobs:
           docker-images: true
           swap-storage: false
 
-      - name: Set up Swap Space # 新增：增加 10GB 虚拟内存，防止编译后期内存爆掉
+      - name: Set up Swap Space 
         uses: pierotofy/set-swap-space@master
         with:
           swap-size-gb: 10
@@ -89,7 +90,7 @@ jobs:
         with:
           vcpkgDirectory: /opt/artifacts/vcpkg
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
-          doNotCache: true  # 修改点：设为 true，强行绕过 GitHub 缓存错误
+          doNotCache: true
 
       - name: Install vcpkg dependencies
         run: |
@@ -97,7 +98,7 @@ jobs:
         shell: bash
 
       - name: Restore bridge files
-        uses: actions/download-artifact@v4  # 修改点：修复错误的 v8.0.1，使用官方 v4 版本
+        uses: actions/download-artifact@v4
         with:
           name: bridge-artifact
           path: ./
@@ -125,7 +126,6 @@ jobs:
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
         run: |
           export PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
-          # 修改点：把安卓打包内存放宽到 3GB，防止 Gradle 打包时 OOM
           sed -i "s/org.gradle.jvmargs=-Xmx1024M/org.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=512m/g" ./flutter/android/gradle.properties
           sed -i "s/signingConfigs.release/signingConfigs.debug/g" ./flutter/android/app/build.gradle
           
