@@ -57,7 +57,6 @@ String findRustlsPlatformVerifierMavenDir() {
     return mavenDir.path
 }
 
-
 repositories {
     maven {
         url = findRustlsPlatformVerifierMavenDir()
@@ -96,12 +95,16 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.carriez.flutter_hbb"
         minSdkVersion 22
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+
+        // ⚠️ 核心杀招 1：剔除模拟器架构，只保留真机架构，包体极限压缩！
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a"
+        }
     }
 
     signingConfigs {
@@ -115,10 +118,11 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.release
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules'
+            // ⚠️ 核心杀招 2：开启强制混淆和无用资源剔除！
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
