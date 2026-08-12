@@ -1,6 +1,14 @@
 name: Build the flutter version of the RustDesk
 
 on:
+  workflow_dispatch:
+    inputs:
+      upload-artifact:
+        type: boolean
+        default: true
+      upload-tag:
+        type: string
+        default: "nightly"
   workflow_call:
     inputs:
       upload-artifact:
@@ -214,7 +222,7 @@ jobs:
           flutter precache --windows
           Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
           Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
-          mv -Force windows-x64-release/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
+          mv -Force windows-x64-release/* C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
 
       - name: Patch flutter
         # x64 stays on Flutter 3.24.5, which needs the dropdown filter patch.
@@ -994,36 +1002,36 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-               clang \
-               cmake \
-               curl \
-               gcc-multilib \
-               git \
-               g++ \
-               g++-multilib \
-               libayatana-appindicator3-dev \
-               libasound2-dev \
-               libc6-dev \
-               libclang-dev \
-               libunwind-dev \
-               libgstreamer1.0-dev \
-               libgstreamer-plugins-base1.0-dev \
-               libgtk-3-dev \
-               libpam0g-dev \
-               libpulse-dev \
-               libva-dev \
-               libxcb-randr0-dev \
-               libxcb-shape0-dev \
-               libxcb-xfixes0-dev \
-               libxdo-dev \
-               libxfixes-dev \
-               llvm-dev \
-               nasm \
-               ninja-build \
-               openjdk-17-jdk-headless \
-               pkg-config \
-               tree \
-               wget
+                clang \
+                cmake \
+                curl \
+                gcc-multilib \
+                git \
+                g++ \
+                g++-multilib \
+                libayatana-appindicator3-dev \
+                libasound2-dev \
+                libc6-dev \
+                libclang-dev \
+                libunwind-dev \
+                libgstreamer1.0-dev \
+                libgstreamer-plugins-base1.0-dev \
+                libgtk-3-dev \
+                libpam0g-dev \
+                libpulse-dev \
+                libva-dev \
+                libxcb-randr0-dev \
+                libxcb-shape0-dev \
+                libxcb-xfixes0-dev \
+                libxdo-dev \
+                libxfixes-dev \
+                llvm-dev \
+                nasm \
+                ninja-build \
+                openjdk-17-jdk-headless \
+                pkg-config \
+                tree \
+                wget
 
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -1268,36 +1276,36 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-               clang \
-               cmake \
-               curl \
-               gcc-multilib \
-               git \
-               g++ \
-               g++-multilib \
-               libayatana-appindicator3-dev \
-               libasound2-dev \
-               libc6-dev \
-               libclang-dev \
-               libunwind-dev \
-               libgstreamer1.0-dev \
-               libgstreamer-plugins-base1.0-dev \
-               libgtk-3-dev \
-               libpam0g-dev \
-               libpulse-dev \
-               libva-dev \
-               libxcb-randr0-dev \
-               libxcb-shape0-dev \
-               libxcb-xfixes0-dev \
-               libxdo-dev \
-               libxfixes-dev \
-               llvm-dev \
-               nasm \
-               ninja-build \
-               openjdk-17-jdk-headless \
-               pkg-config \
-               tree \
-               wget
+                clang \
+                cmake \
+                curl \
+                gcc-multilib \
+                git \
+                g++ \
+                g++-multilib \
+                libayatana-appindicator3-dev \
+                libasound2-dev \
+                libc6-dev \
+                libclang-dev \
+                libunwind-dev \
+                libgstreamer1.0-dev \
+                libgstreamer-plugins-base1.0-dev \
+                libgtk-3-dev \
+                libpam0g-dev \
+                libpulse-dev \
+                libva-dev \
+                libxcb-randr0-dev \
+                libxcb-shape0-dev \
+                libxcb-xfixes0-dev \
+                libxdo-dev \
+                libxfixes-dev \
+                llvm-dev \
+                nasm \
+                ninja-build \
+                openjdk-17-jdk-headless \
+                pkg-config \
+                tree \
+                wget
 
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
