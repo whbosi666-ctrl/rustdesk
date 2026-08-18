@@ -16,16 +16,18 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
 
-      - name: Build APK
+      - name: Build APK with Flutter
         run: |
-          chmod +x gradlew || true
-          ./gradlew assembleDebug --stacktrace
+          flutter doctor
+          flutter build apk --debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: rustdesk-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: build/app/outputs/flutter-apk/*.apk
