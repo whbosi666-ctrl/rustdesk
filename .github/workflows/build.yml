@@ -1,49 +1,44 @@
-name: Build Custom RustDesk APK
+name: Build Android APK
+
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+      # 1. 拉取代码
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang llvm libclang-dev pkg-config cmake build-essential protobuf-compiler
-
+      # 2. 配置 Java 环境 (Flutter 最新版推荐 Java 17，若项目老旧可改降为 11)
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
           distribution: 'temurin'
+          java-version: '17'
 
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
-
-      - name: Install Rust Tools
-        run: |
-          cargo install cargo-ndk || true
-          cargo install flutter_rust_bridge_codegen || true
-
+      # 3. 配置 Flutter 环境
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
+      # 4. 获取依赖
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 5. 执行打包 (加 --verbose 打印详细报错，防隐瞒)
       - name: Build APK
-        run: |
-          flutter pub get
-          flutter build apk --debug --no-tree-shake-icons
+        run: flutter build apk --debug --verbose
 
-      - name: Upload APK
+      # 6. 上传打包好的 APK 产物
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rustdesk-apk
-          path: build/app/outputs/flutter-apk/*.apk
+          name: app-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
