@@ -16,18 +16,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
-      - name: Build APK with Flutter
+      - name: Build APK
         run: |
-          flutter doctor
-          flutter build apk --debug
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: rustdesk-apk
-          path: build/app/outputs/flutter-apk/*.apk
+          path: android/app/build/outputs/apk/debug/*.apk
