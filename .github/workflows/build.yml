@@ -28,11 +28,10 @@ jobs:
 
       - name: Build APK
         run: |
-          chmod +x gradlew || true
-          ./gradlew assembleDebug --stacktrace
+          flutter build apk --debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: rustdesk-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: build/app/outputs/flutter-apk/*.apk
