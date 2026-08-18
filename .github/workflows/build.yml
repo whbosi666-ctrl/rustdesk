@@ -1,44 +1,45 @@
-name: Build Android APK
+name: Build RustDesk Android
 
 on:
-  push:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30 # 强制 30 分钟断路，防止无限挂死
 
     steps:
-      # 1. 拉取代码
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. 配置 Java 环境 (Flutter 最新版推荐 Java 17，若项目老旧可改降为 11)
-      - name: Set up Java 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. 配置 Flutter 环境
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.19.x'
           channel: 'stable'
           cache: true
 
-      # 4. 获取依赖
-      - name: Install dependencies
-        run: flutter pub get
-
-      # 5. 执行打包 (加 --verbose 打印详细报错，防隐瞒)
-      - name: Build APK
-        run: flutter build apk --debug --verbose
-
-      # 6. 上传打包好的 APK 产物
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      - name: Setup Rust & Targets
+        uses: dtolnay/rust-toolchain@stable
         with:
-          name: app-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          targets: aarch64-linux-android
+
+      - name: Install Cargo Tools & Protoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler libclang-dev
+          cargo install flutter_rust_bridge_codegen --version 1.80.0 --force
+
+      - name: Build Android APK
+        env:
+          CARGO_BUILD_JOBS: 2 # 限制并发线程，防止 CI 的 7G 内存爆掉卡死
+        run: |
+          cd flutter
+          flutter pub get
+          flutter build apk --release --target-platform android-arm64
