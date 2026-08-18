@@ -1,0 +1,156 @@
+import com.google.protobuf.gradle.*
+import groovy.json.JsonSlurper
+import java.io.ByteArrayOutputStream
+
+plugins {
+    id "com.google.protobuf" version "0.9.4"
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+// Add rustls-platform-verifier Android support
+def findRustlsPlatformVerifierMavenDir() {
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            workingDir = new File("../..")
+            commandLine("cargo", "metadata", "--format-version", "1")
+            standardOutput = stdout
+            ignoreExitValue = true
+        }
+        def dependencyText = stdout.toString()
+        if (dependencyText.isEmpty()) {
+            println("⚠ Warning: 'cargo metadata' failed. Native dependencies may not be resolved.")
+            return null
+        }
+
+        def dependencyJson = new JsonSlurper().parseText(dependencyText)
+        def pkg = dependencyJson.packages.find { it.name == "rustls-platform-verifier-android" }
+        
+        if (pkg == null) {
+            println("⚠ Warning: rustls-platform-verifier-android package not found in cargo metadata!")
+            return null
+        }
+        
+        def manifestPath = file(pkg.manifest_path)
+        def mavenDir = new File(manifestPath.parentFile, "maven")
+        
+        if (!mavenDir.exists()) {
+            println("⚠ Warning: Maven directory not found at: ${mavenDir.path}")
+            return null
+        }
+        
+        println("✓ Found rustls-platform-verifier maven repo at: ${mavenDir.path}")
+        return mavenDir.path
+    } catch (Exception e) {
+        println("⚠ Warning: Failed to run cargo. Please ensure Rust is installed and 'cargo' is in your PATH. Error: ${e.message}")
+        return null
+    }
+}
+
+def rustlsMavenDir = findRustlsPlatformVerifierMavenDir()
+repositories {
+    if (rustlsMavenDir != null) {
+        maven {
+            url = rustlsMavenDir
+            metadataSources.artifact()
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.20.1'
+    }
+
+    generateProtoTasks {
+        all().configureEach { task ->
+            task.builtins {
+                java {
+                    option "lite"
+                }
+            }
+        }
+    }
+}
+
+android {
+    namespace "com.carriez.flutter_hbb"
+    compileSdk 34
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+
+        main.proto.srcDirs += '../../../libs/hbb_common/protos'
+        main.proto.includes += "message.proto"
+    }
+
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId "com.carriez.flutter_hbb"
+        minSdk 22
+        targetSdk 33
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    signingConfigs {
+      release {
+        keyAlias keystoreProperties['keyAlias']
+        keyPassword keystoreProperties['keyPassword']
+        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+        storePassword keystoreProperties['storePassword']
+      }
+    }
+
+    buildTypes {
+        release {
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules'
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {
+    implementation 'com.google.protobuf:protobuf-javalite:3.20.1'
+    implementation "androidx.media:media:1.6.0"
+    implementation 'com.github.getActivity:XXPermissions:18.5'
+    implementation("org.jetbrains.kotlin:kotlin-stdlib") { version { strictly("1.9.10") } }
+    implementation 'com.caverock:androidsvg-aar:1.4'
+    implementation "rustls:rustls-platform-verifier:0.1.1"
+}
