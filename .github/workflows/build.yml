@@ -1,4 +1,4 @@
-name: Build Decoupled Pure Android APK
+name: Build Custom RustDesk APK
 on:
   push:
     branches: [ "main" ]
@@ -6,9 +6,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Java 17
@@ -17,19 +17,30 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set up Flutter
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+
+      - name: Set up Flutter (Locked compatible version)
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.19.6'
           channel: 'stable'
 
-      - name: Get Flutter Packages
-        run: flutter pub get
+      - name: Install RustDesk System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cargo llvm-dev libclang-dev clang cmake build-essential nasm yasm pkg-config libva-dev libvdpau-dev libX11-dev libxcb1-dev libXfixes-dev protoc
+          cargo install cargo-ndk || true
 
-      - name: Build APK (Pure Flutter)
-        run: flutter build apk --debug --no-tree-shake-icons
+      - name: Build Android APK
+        run: |
+          flutter pub get
+          flutter build apk --debug --no-tree-shake-icons
 
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: rustdesk-decoupled-apk
+          name: rustdesk-custom-apk
           path: build/app/outputs/flutter-apk/*.apk
