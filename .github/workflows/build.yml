@@ -1,4 +1,4 @@
-name: Build Custom RustDesk APK
+name: Build Fix AGP Android APK
 on:
   push:
     branches: [ "main" ]
@@ -6,41 +6,15 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: subosito/flutter-action@v2
         with:
-          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
-
-      - name: Set up Flutter (Locked compatible version)
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.6'
           channel: 'stable'
-
-      - name: Install RustDesk System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cargo llvm-dev libclang-dev clang cmake build-essential nasm yasm pkg-config libva-dev libvdpau-dev libX11-dev libxcb1-dev libXfixes-dev protoc
-          cargo install cargo-ndk || true
-
-      - name: Build Android APK
-        run: |
-          flutter pub get
-          flutter build apk --debug --no-tree-shake-icons
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: rustdesk-custom-apk
-          path: build/app/outputs/flutter-apk/*.apk
+      - run: flutter pub get
+      - run: flutter build apk --debug
